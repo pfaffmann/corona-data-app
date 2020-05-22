@@ -18,7 +18,7 @@ const toDate = (intDate) => {
   return new Date(intDate).toLocaleString('de-DE', { dateStyle: 'short' });
 };
 
-export default function DataTable(props) {
+export default function FullDataTable(props) {
   const classes = useStyles();
   const data = props.data;
 

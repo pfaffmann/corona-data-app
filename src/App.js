@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import DataTable from './components/DataTable';
+import FullDataTable from './components/FullDataTable';
 import './App.css';
 import Button from '@material-ui/core/Button';
 
@@ -39,6 +39,12 @@ function App() {
         {loading ? <h1>loading...</h1> : <h1>Corona-Data</h1>}
       </div>
       <div className="App-buttons">
+        <Button variant="outlined" color="primary">
+          Daten anzeigen
+        </Button>
+        <Button variant="outlined" color="primary">
+          Octave Daten erzeugen
+        </Button>
         <Button
           variant="outlined"
           color="primary"
@@ -46,12 +52,12 @@ function App() {
             setShowDataTable(true);
           }}
         >
-          Aktuelle Daten anzeigen
+          Alle Daten anzeigen
         </Button>
       </div>
       {coronaData.fields.length > 0 && showDataTable ? (
         <div className="App-table">
-          <DataTable data={coronaData}></DataTable>
+          <FullDataTable data={coronaData}></FullDataTable>
         </div>
       ) : null}
     </div>
