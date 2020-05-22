@@ -37,23 +37,23 @@ function App() {
     <div className="App">
       <div className="App-header">
         {loading ? <h1>loading...</h1> : <h1>Corona-Data</h1>}
-        <div className="App-buttons">
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => {
-              setShowDataTable(true);
-            }}
-          >
-            Aktuelle Daten anzeigen
-          </Button>
-        </div>
-        {coronaData.fields.length > 0 && showDataTable ? (
-          <div>
-            <DataTable data={coronaData}></DataTable>
-          </div>
-        ) : null}
       </div>
+      <div className="App-buttons">
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => {
+            setShowDataTable(true);
+          }}
+        >
+          Aktuelle Daten anzeigen
+        </Button>
+      </div>
+      {coronaData.fields.length > 0 && showDataTable ? (
+        <div className="App-table">
+          <DataTable data={coronaData}></DataTable>
+        </div>
+      ) : null}
     </div>
   );
 }

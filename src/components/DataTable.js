@@ -30,37 +30,32 @@ export default function DataTable(props) {
         <Table className={classes.table} aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell>Bundesland</TableCell>
-              <TableCell>Landkreis</TableCell>
-              <TableCell>Altersgruppe</TableCell>
-              <TableCell>Geschlecht</TableCell>
-              <TableCell>Anzahl Fall</TableCell>
-              <TableCell>Anzahl Todesfall</TableCell>
-              <TableCell>Meldedatum</TableCell>
-              <TableCell>Anzahl Genesenen</TableCell>
+              {data.fields.map((field) => (
+                <TableCell>{field.name}</TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {data.features.map((feature) => (
               <TableRow key={feature.attributes.ObjectId}>
-                {/* <TableCell>{feature.attributes.IdBundesland}</TableCell> */}
+                <TableCell>{feature.attributes.IdBundesland}</TableCell>
                 <TableCell>{feature.attributes.Bundesland}</TableCell>
                 <TableCell>{feature.attributes.Landkreis}</TableCell>
                 <TableCell>{feature.attributes.Altersgruppe}</TableCell>
                 <TableCell>{feature.attributes.Geschlecht}</TableCell>
                 <TableCell>{feature.attributes.AnzahlFall}</TableCell>
                 <TableCell>{feature.attributes.AnzahlTodesfall}</TableCell>
-                {/* <TableCell>{feature.attributes.ObjectId}</TableCell> */}
+                <TableCell>{feature.attributes.ObjectId}</TableCell>
                 <TableCell>{toDate(feature.attributes.Meldedatum)}</TableCell>
-                {/* <TableCell>{feature.attributes.IdLandkreis}</TableCell> */}
-                {/* <TableCell>{feature.attributes.Datenstand}</TableCell> */}
-                {/* <TableCell>{feature.attributes.NeuerFall}</TableCell> */}
-                {/* <TableCell>{feature.attributes.NeuerTodesfall}</TableCell> */}
-                {/* <TableCell>{toDate(feature.attributes.Refdatum)}</TableCell> */}
-                {/* <TableCell>{feature.attributes.NeuGenesen}</TableCell> */}
+                <TableCell>{feature.attributes.IdLandkreis}</TableCell>
+                <TableCell>{feature.attributes.Datenstand}</TableCell>
+                <TableCell>{feature.attributes.NeuerFall}</TableCell>
+                <TableCell>{feature.attributes.NeuerTodesfall}</TableCell>
+                <TableCell>{toDate(feature.attributes.Refdatum)}</TableCell>
+                <TableCell>{feature.attributes.NeuGenesen}</TableCell>
                 <TableCell>{feature.attributes.AnzahlGenesen}</TableCell>
-                {/* <TableCell>{feature.attributes.IstErkrankungsbeginn}</TableCell> */}
-                {/* <TableCell>{feature.attributes.Altersgruppe2}</TableCell> */}
+                <TableCell>{feature.attributes.IstErkrankungsbeginn}</TableCell>
+                <TableCell>{feature.attributes.Altersgruppe2}</TableCell>
               </TableRow>
             ))}
           </TableBody>
