@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import './components.css';
+import React, { useState, useEffect } from "react";
+import "./components.css";
 
-import Loading from './Loading';
+import Loading from "./Loading";
 
 export default function Data() {
   const [loading, setLoading] = useState(false);
