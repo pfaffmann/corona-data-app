@@ -4,10 +4,6 @@ import './components.css';
 
 import Loading from './Loading';
 
-const toDate = (intDate) => {
-  return new Date(intDate).toLocaleString('de-DE', { dateStyle: 'short' });
-};
-
 const OBJECT_ID_API_URL =
   'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1%3D1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=true&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=';
 
