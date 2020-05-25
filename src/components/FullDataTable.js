@@ -17,16 +17,9 @@ import './components.css';
 const OBJECT_ID_API_URL =
   'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1%3D1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=true&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=';
 
-const coronaDataSchema = {
-  objectIdFieldName: 'defew',
-  uniqueIdField: { a: 'fefwef', b: 'frrg' },
-  globalIdFieldName: 'fwefwef',
-  fields: [1, 2, 3, 4, 5, 6],
-  exceededTransferLimit: false,
-  features: [1, 2, 3, 4, 5, 6, 7, 8],
+const DATA_API_URL = (untereSchranke, obereSchranke) => {
+  return `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=objectId+>%3D+${untereSchranke}+AND+objectId+<+${obereSchranke}&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`;
 };
-
-const test = [coronaDataSchema, coronaDataSchema, coronaDataSchema];
 
 const useStyles = makeStyles({
   slider: {
@@ -45,22 +38,29 @@ function valuetext(value) {
   return `S. ${value}`;
 }
 
+// function combineArray(array) {
+//   let dataArray = [];
+//   array.map((data) => (dataArray = dataArray.concat(data.features)));
+//   return dataArray;
+// }
+
 export default function FullDataTable() {
   const classes = useStyles();
 
   const [loading, setLoading] = useState(false);
   const [coronaData, setCoronaData] = useState([]);
   const [notShowData, setNotShowData] = useState(true);
-  const [objectIds, setObjectIds] = useState([]);
+  //const [objectIds, setObjectIds] = useState([]);
   const [page, setPage] = useState(1);
   const [anzData, setAnzData] = useState(0);
 
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
+      let coronaDataTmp = [];
       let result = await fetch(OBJECT_ID_API_URL);
       let data = await result.json();
-      setObjectIds(data.objectIds); //optional
+      //setObjectIds(data.objectIds); //optional
       const maxSchranke = data.objectIds[data.objectIds.length - 1] - 1;
       const fetchCycles = Math.ceil(data.objectIds.length / 5000);
       //console.log(fetchCycles);
@@ -73,16 +73,18 @@ export default function FullDataTable() {
         //console.log(`untere Schranke: ${untereSchranke}`);
         //console.log(`obere  Schranke: ${obereSchranke}`);
 
-        let res = await fetch(
-          `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=objectId+>%3D+${untereSchranke}+AND+objectId+<+${obereSchranke}&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`
-        );
+        let res = await fetch(DATA_API_URL(untereSchranke, obereSchranke));
         let d = await res.json();
         //console.log(d);
-        coronaData.push(d);
+        coronaDataTmp.push(d);
       }
+      setCoronaData(coronaDataTmp);
+      //console.log(coronaDataTmp);
+      //const allData = combineArray(coronaDataTmp);
+      //console.log(allData);
       setAnzData(
-        (coronaData.length - 1) * 5000 +
-          coronaData[coronaData.length - 1].features.length
+        (coronaDataTmp.length - 1) * 5000 +
+          coronaDataTmp[coronaDataTmp.length - 1].features.length
       );
       setLoading(false);
     };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import Button from '@material-ui/core/Button';
 
@@ -20,7 +20,6 @@ const viewSchema = {
 };
 
 function App() {
-  const [showDataTable, setShowDataTable] = useState(false);
   const [view, setView] = useState(viewSchema);
 
   return (
