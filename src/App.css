@@ -11,13 +11,18 @@
 
 .App {
   min-width: 100vw;
-  background-color: white;
   display: flex;
   flex-direction: column;
+  background-image: url('./components/virusLogo.svg');
+  background-repeat: no-repeat;
+  background-position: fixed;
+  background-position-x: center;
+  background-position-y: -20vh;
+  background-size: 60%;
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: rgba(40, 44, 52, 0.75);
   min-height: 25vh;
   width: 100%;
   display: flex;
@@ -30,10 +35,11 @@
 
 .App-body {
   min-height: 65vh;
+  background-color: white;
 }
 
 .App-footer {
-  background-color: #282c34;
+  background-color: rgba(40, 44, 52, 0.75);
   min-height: 10vh;
   width: 100%;
   display: flex;

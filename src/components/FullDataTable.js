@@ -10,6 +10,8 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/core/Slider';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 
 import Loading from './Loading';
 import './components.css';
@@ -21,14 +23,24 @@ const DATA_API_URL = (untereSchranke, obereSchranke) => {
   return `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=objectId+>%3D+${untereSchranke}+AND+objectId+<+${obereSchranke}&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`;
 };
 
-const useStyles = makeStyles({
+function Alert(props) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
+const useStyles = makeStyles((theme) => ({
   slider: {
     width: 300,
   },
   table: {
     minWidth: 650,
   },
-});
+  root: {
+    width: '100%',
+    '& > * + *': {
+      marginTop: theme.spacing(2),
+    },
+  },
+}));
 
 const toDate = (intDate) => {
   return new Date(intDate).toLocaleString('de-DE', { dateStyle: 'short' });
@@ -53,6 +65,19 @@ export default function FullDataTable() {
   //const [objectIds, setObjectIds] = useState([]);
   const [page, setPage] = useState(1);
   const [anzData, setAnzData] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setNotShowData(false);
+    setOpen(false);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -121,13 +146,27 @@ export default function FullDataTable() {
             />
           </div>
           {notShowData ? (
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => setNotShowData(false)}
-            >
-              Zeilen anzeigen
-            </Button>
+            <div className={classes.root}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={() => {
+                  handleClick();
+                  //setNotShowData(false);
+                }}
+              >
+                Zeilen anzeigen
+              </Button>
+              <Snackbar
+                open={open}
+                autoHideDuration={3000}
+                onClose={handleClose}
+              >
+                <Alert onClose={handleClose} severity="info">
+                  Tabelle wird erstellt. Dies kann sehr lange dauern.
+                </Alert>
+              </Snackbar>
+            </div>
           ) : (
             <TableContainer component={Paper}>
               <Table className={classes.table} aria-label="simple table">
