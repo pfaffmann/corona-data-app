@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import Button from '@material-ui/core/Button';
-import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert from '@material-ui/lab/Alert';
-import { makeStyles } from '@material-ui/core/styles';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import React, { useState, useEffect } from "react";
+import Button from "@material-ui/core/Button";
+import Snackbar from "@material-ui/core/Snackbar";
+import MuiAlert from "@material-ui/lab/Alert";
+import { makeStyles } from "@material-ui/core/styles";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 
-import './components.css';
+import "./components.css";
 
-import Loading from './Loading';
+import Loading from "./Loading";
 
 const OBJECT_ID_API_URL =
-  'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1%3D1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=true&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=';
+  "https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1%3D1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=true&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=";
 
 const DATA_API_URL = (untereSchranke, obereSchranke) => {
   return `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=objectId+>%3D+${untereSchranke}+AND+objectId+<+${obereSchranke}&objectIds=&time=&resultType=none&outFields=AnzahlFall%2C+AnzahlTodesfall%2C+AnzahlGenesen%2C+NeuerFall%2C+NeuerTodesfall%2C+NeuGenesen%2C+Meldedatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`;
@@ -18,22 +18,22 @@ const DATA_API_URL = (untereSchranke, obereSchranke) => {
 
 function createOctaveString(coronaData) {
   const comment =
-    '## Copyright (C) 2020 Christoph Pfaffmann\n##\n## This program is free software: you can redistribute it and/or modify it\n## under the terms of the GNU General Public License as published by\n## the Free Software Foundation, either version 3 of the License, or\n## (at your option) any later version.\n##\n## This program is distributed in the hope that it will be useful, but\n## WITHOUT ANY WARRANTY; without even the implied warranty of\n## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n## GNU General Public License for more details.\n##\n## You should have received a copy of the GNU General Public License\n## along with this program. If not, see\n## https://www.gnu.org/licenses/.\n## Author: Christoph Pfaffmann\n## Created: 2020-05-25\n';
+    "## Copyright (C) 2020 Christoph Pfaffmann\n##\n## This program is free software: you can redistribute it and/or modify it\n## under the terms of the GNU General Public License as published by\n## the Free Software Foundation, either version 3 of the License, or\n## (at your option) any later version.\n##\n## This program is distributed in the hope that it will be useful, but\n## WITHOUT ANY WARRANTY; without even the implied warranty of\n## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n## GNU General Public License for more details.\n##\n## You should have received a copy of the GNU General Public License\n## along with this program. If not, see\n## https://www.gnu.org/licenses/.\n## Author: Christoph Pfaffmann\n## Created: 2020-05-25\n";
 
   if (coronaData.length > 0) {
     const cummulatedInfectedString = coronaData
       .map((data) => data.cummulatedInfected)
-      .join(', ');
+      .join(", ");
     const cummulatedDeathsString = coronaData
       .map((data) => data.cummulatedDeaths)
-      .join(', ');
+      .join(", ");
     const cummulatedRecoveredString = coronaData
       .map((data) => data.cummulatedRecovered)
-      .join(', ');
+      .join(", ");
     const octaveString = `${comment}function y = coronaData()\n  infects=[${cummulatedInfectedString}];\n  deads=[${cummulatedDeathsString}];\n  recovered=[${cummulatedRecoveredString}];\n  y=[infects;deads;recovered];\nendfunction`;
     return octaveString;
   }
-  return '';
+  return "";
 }
 
 function combineArray(array) {
@@ -66,24 +66,34 @@ function generateOctaveData(array) {
         arr[index + 1].attributes.Meldedatum
       ) {
         infected +=
-          element.attributes.NeuerFall >= 0 ? element.attributes.AnzahlFall : 0;
+          element.attributes.NeuerFall === 0 ||
+          element.attributes.NeuerFall === 1
+            ? element.attributes.AnzahlFall
+            : 0;
         deaths +=
-          element.attributes.NeuerTodesfall >= 0
+          element.attributes.NeuerTodesfall === 0 ||
+          element.attributes.NeuerTodesfall === 1
             ? element.attributes.AnzahlTodesfall
             : 0;
         recovered +=
-          element.attributes.NeuGenesen >= 0
+          element.attributes.NeuGenesen === 0 ||
+          element.attributes.NeuGenesen === 1
             ? element.attributes.AnzahlGenesen
             : 0;
       } else {
         infected +=
-          element.attributes.NeuerFall >= 0 ? element.attributes.AnzahlFall : 0;
+          element.attributes.NeuerFall === 0 ||
+          element.attributes.NeuerFall === 1
+            ? element.attributes.AnzahlFall
+            : 0;
         deaths +=
-          element.attributes.NeuerTodesfall >= 0
+          element.attributes.NeuerTodesfall === 0 ||
+          element.attributes.NeuerTodesfall === 1
             ? element.attributes.AnzahlTodesfall
             : 0;
         recovered +=
-          element.attributes.NeuGenesen >= 0
+          element.attributes.NeuGenesen === 0 ||
+          element.attributes.NeuGenesen === 1
             ? element.attributes.AnzahlGenesen
             : 0;
         datum = element.attributes.Meldedatum;
@@ -107,13 +117,17 @@ function generateOctaveData(array) {
       }
     } else {
       infected +=
-        element.attributes.NeuerFall >= 0 ? element.attributes.AnzahlFall : 0;
+        element.attributes.NeuerFall === 0 || element.attributes.NeuerFall === 1
+          ? element.attributes.AnzahlFall
+          : 0;
       deaths +=
-        element.attributes.NeuerTodesfall >= 0
+        element.attributes.NeuerTodesfall === 0 ||
+        element.attributes.NeuerTodesfall === 1
           ? element.attributes.AnzahlTodesfall
           : 0;
       recovered +=
-        element.attributes.NeuGenesen >= 0
+        element.attributes.NeuGenesen === 0 ||
+        element.attributes.NeuGenesen === 1
           ? element.attributes.AnzahlGenesen
           : 0;
       datum = element.attributes.Meldedatum;
@@ -141,8 +155,8 @@ function Alert(props) {
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    width: '100%',
-    '& > * + *': {
+    width: "100%",
+    "& > * + *": {
       marginTop: theme.spacing(2),
     },
   },
@@ -162,7 +176,7 @@ export default function Data() {
   };
 
   const handleClose = (event, reason) => {
-    if (reason === 'clickaway') {
+    if (reason === "clickaway") {
       return;
     }
 
@@ -250,7 +264,7 @@ export default function Data() {
               ## along with this program. If not, see
             </code>
             <code className="octave-comments">
-              ##{' '}
+              ##{" "}
               <a
                 className="octave-comments"
                 href="https://www.gnu.org/licenses/"
@@ -262,12 +276,12 @@ export default function Data() {
               .
             </code>
             <code className="octave-comments">
-              ## Author: Christoph Pfaffmann{' '}
+              ## Author: Christoph Pfaffmann{" "}
             </code>
             <code className="octave-comments">## Created: 2020-05-25</code>
             <code>
-              <span className="octave-function">function</span> <span>y</span>{' '}
-              <span className="octave-symbols">=</span> <span>coronaData</span>{' '}
+              <span className="octave-function">function</span> <span>y</span>{" "}
+              <span className="octave-symbols">=</span> <span>coronaData</span>{" "}
               <span className="octave-symbols">()</span>
             </code>
 
