@@ -1,152 +1,52 @@
-import React, { useState, useEffect } from "react";
-import Button from "@material-ui/core/Button";
-import Snackbar from "@material-ui/core/Snackbar";
-import MuiAlert from "@material-ui/lab/Alert";
-import { makeStyles } from "@material-ui/core/styles";
-import { CopyToClipboard } from "react-copy-to-clipboard";
+import React, { useState, useEffect } from 'react';
+import Button from '@material-ui/core/Button';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
+import { makeStyles } from '@material-ui/core/styles';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { useStoreState } from 'easy-peasy';
+import './components.css';
 
-import "./components.css";
+import {
+  generateOctaveData,
+  toDate,
+  sortArrayByMeldedatum,
+} from '../functions';
 
-import Loading from "./Loading";
-
-const OBJECT_ID_API_URL =
-  "https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=1%3D1&objectIds=&time=&resultType=none&outFields=*&returnIdsOnly=true&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=";
-
-const DATA_API_URL = (untereSchranke, obereSchranke) => {
-  return `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=objectId+>%3D+${untereSchranke}+AND+objectId+<+${obereSchranke}&objectIds=&time=&resultType=none&outFields=AnzahlFall%2C+AnzahlTodesfall%2C+AnzahlGenesen%2C+NeuerFall%2C+NeuerTodesfall%2C+NeuGenesen%2C+Meldedatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`;
-};
+import Loading from './Loading';
 
 function createOctaveString(coronaData) {
-  const comment =
-    "## Copyright (C) 2020 Christoph Pfaffmann\n##\n## This program is free software: you can redistribute it and/or modify it\n## under the terms of the GNU General Public License as published by\n## the Free Software Foundation, either version 3 of the License, or\n## (at your option) any later version.\n##\n## This program is distributed in the hope that it will be useful, but\n## WITHOUT ANY WARRANTY; without even the implied warranty of\n## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n## GNU General Public License for more details.\n##\n## You should have received a copy of the GNU General Public License\n## along with this program. If not, see\n## https://www.gnu.org/licenses/.\n## Author: Christoph Pfaffmann\n## Created: 2020-05-25\n";
+  const today = new Date();
+  const comment = `## Copyright (C) ${today.getFullYear()} Christoph Pfaffmann
+##
+## This program is free software: you can redistribute it and/or modify it
+## under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.\n##\n## This program is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program. If not, see
+## https://www.gnu.org/licenses/.
+## Author: Christoph Pfaffmann
+## Created: ${toDate(today)}\n`;
 
   if (coronaData.length > 0) {
-    const cummulatedInfectedString = coronaData
-      .map((data) => data.cummulatedInfected)
-      .join(", ");
+    const cummulatedCasesString = coronaData
+      .map((data) => data.cummulatedCases)
+      .join(', ');
     const cummulatedDeathsString = coronaData
       .map((data) => data.cummulatedDeaths)
-      .join(", ");
+      .join(', ');
     const cummulatedRecoveredString = coronaData
       .map((data) => data.cummulatedRecovered)
-      .join(", ");
-    const octaveString = `${comment}function y = coronaData()\n  infects=[${cummulatedInfectedString}];\n  deads=[${cummulatedDeathsString}];\n  recovered=[${cummulatedRecoveredString}];\n  y=[infects;deads;recovered];\nendfunction`;
+      .join(', ');
+    const octaveString = `${comment}function y = coronaData()\n  cases=[${cummulatedCasesString}];\n  deads=[${cummulatedDeathsString}];\n  recovered=[${cummulatedRecoveredString}];\n  y=[cases;deads;recovered];\nendfunction`;
     return octaveString;
   }
-  return "";
-}
-
-function combineArray(array) {
-  let dataArray = [];
-  array.map((data) => (dataArray = dataArray.concat(data.features)));
-  return dataArray;
-}
-
-function sortArrayByMeldedatum(array) {
-  let sortedArray = [];
-  sortedArray = array.sort(
-    (a, b) => a.attributes.Meldedatum - b.attributes.Meldedatum
-  );
-  return sortedArray;
-}
-
-function generateOctaveData(array) {
-  let octaveData = [];
-  let datum = 0;
-  let cummulatedInfected = 0;
-  let cummulatedRecovered = 0;
-  let cummulatedDeaths = 0;
-  let infected = 0;
-  let recovered = 0;
-  let deaths = 0;
-  array.map((element, index, arr) => {
-    if (index < arr.length - 1) {
-      if (
-        arr[index].attributes.Meldedatum ===
-        arr[index + 1].attributes.Meldedatum
-      ) {
-        infected +=
-          element.attributes.NeuerFall === 0 ||
-          element.attributes.NeuerFall === 1
-            ? element.attributes.AnzahlFall
-            : 0;
-        deaths +=
-          element.attributes.NeuerTodesfall === 0 ||
-          element.attributes.NeuerTodesfall === 1
-            ? element.attributes.AnzahlTodesfall
-            : 0;
-        recovered +=
-          element.attributes.NeuGenesen === 0 ||
-          element.attributes.NeuGenesen === 1
-            ? element.attributes.AnzahlGenesen
-            : 0;
-      } else {
-        infected +=
-          element.attributes.NeuerFall === 0 ||
-          element.attributes.NeuerFall === 1
-            ? element.attributes.AnzahlFall
-            : 0;
-        deaths +=
-          element.attributes.NeuerTodesfall === 0 ||
-          element.attributes.NeuerTodesfall === 1
-            ? element.attributes.AnzahlTodesfall
-            : 0;
-        recovered +=
-          element.attributes.NeuGenesen === 0 ||
-          element.attributes.NeuGenesen === 1
-            ? element.attributes.AnzahlGenesen
-            : 0;
-        datum = element.attributes.Meldedatum;
-        cummulatedInfected += infected;
-        cummulatedDeaths += deaths;
-        cummulatedRecovered += recovered;
-        //Speichere die Were in Array
-        octaveData.push({
-          cummulatedInfected: cummulatedInfected,
-          cummulatedRecovered: cummulatedRecovered,
-          cummulatedDeaths: cummulatedDeaths,
-          infected: infected,
-          recovered: recovered,
-          deaths: deaths,
-          date: datum,
-        });
-        //setze zurück auf 0
-        infected = 0;
-        deaths = 0;
-        recovered = 0;
-      }
-    } else {
-      infected +=
-        element.attributes.NeuerFall === 0 || element.attributes.NeuerFall === 1
-          ? element.attributes.AnzahlFall
-          : 0;
-      deaths +=
-        element.attributes.NeuerTodesfall === 0 ||
-        element.attributes.NeuerTodesfall === 1
-          ? element.attributes.AnzahlTodesfall
-          : 0;
-      recovered +=
-        element.attributes.NeuGenesen === 0 ||
-        element.attributes.NeuGenesen === 1
-          ? element.attributes.AnzahlGenesen
-          : 0;
-      datum = element.attributes.Meldedatum;
-      cummulatedInfected += infected;
-      cummulatedDeaths += deaths;
-      cummulatedRecovered += recovered;
-      //Speichere die Were in Array
-      octaveData.push({
-        cummulatedInfected: cummulatedInfected,
-        cummulatedRecovered: cummulatedRecovered,
-        cummulatedDeaths: cummulatedDeaths,
-        infected: infected,
-        recovered: recovered,
-        deaths: deaths,
-        date: datum,
-      });
-    }
-  });
-  return octaveData;
+  return '';
 }
 
 function Alert(props) {
@@ -155,19 +55,19 @@ function Alert(props) {
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    width: "100%",
-    "& > * + *": {
+    width: '100%',
+    '& > * + *': {
       marginTop: theme.spacing(2),
     },
   },
 }));
 
-export default function Data() {
+export default function CoronaData() {
   const [loading, setLoading] = useState(false);
   const [coronaData, setCoronaData] = useState([]);
   const [coronaOctaveData, setCoronaOctaveData] = useState([]);
-  //const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const [open, setOpen] = useState(false);
+  const { data } = useStoreState((state) => state.coronaData);
 
   const classes = useStyles();
 
@@ -176,7 +76,7 @@ export default function Data() {
   };
 
   const handleClose = (event, reason) => {
-    if (reason === "clickaway") {
+    if (reason === 'clickaway') {
       return;
     }
 
@@ -185,25 +85,8 @@ export default function Data() {
 
   useEffect(() => {
     setLoading(true);
-    const fetchData = async () => {
-      let fetchedCoronaData = [];
-      let result = await fetch(OBJECT_ID_API_URL);
-      let data = await result.json();
-      const maxSchranke = data.objectIds[data.objectIds.length - 1] - 1;
-      const fetchCycles = Math.ceil(data.objectIds.length / 5000);
-      for (let cycle = 0; cycle < fetchCycles; cycle++) {
-        let untereSchranke = data.objectIds[cycle * 5000];
-        let obereSchranke =
-          untereSchranke + 5000 < maxSchranke
-            ? untereSchranke + 5000
-            : maxSchranke;
-        let res = await fetch(DATA_API_URL(untereSchranke, obereSchranke));
-        let d = await res.json();
-        fetchedCoronaData.push(d);
-      }
-      setCoronaData(sortArrayByMeldedatum(combineArray(fetchedCoronaData)));
-    };
-    fetchData();
+    setCoronaData(sortArrayByMeldedatum(data));
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -212,8 +95,6 @@ export default function Data() {
       setLoading(false);
     }
   }, [coronaData]);
-  if (coronaData.length > 0) console.log(coronaData);
-  if (coronaOctaveData.length > 0) console.log(coronaOctaveData);
 
   return (
     <div className="comp">
@@ -264,7 +145,7 @@ export default function Data() {
               ## along with this program. If not, see
             </code>
             <code className="octave-comments">
-              ##{" "}
+              ##{' '}
               <a
                 className="octave-comments"
                 href="https://www.gnu.org/licenses/"
@@ -276,23 +157,23 @@ export default function Data() {
               .
             </code>
             <code className="octave-comments">
-              ## Author: Christoph Pfaffmann{" "}
+              ## Author: Christoph Pfaffmann{' '}
             </code>
-            <code className="octave-comments">## Created: 2020-05-25</code>
+            <code className="octave-comments">
+              ## Created: {toDate(new Date())}
+            </code>
             <code>
-              <span className="octave-function">function</span> <span>y</span>{" "}
-              <span className="octave-symbols">=</span> <span>coronaData</span>{" "}
+              <span className="octave-function">function</span> <span>y</span>{' '}
+              <span className="octave-symbols">=</span> <span>coronaData</span>{' '}
               <span className="octave-symbols">()</span>
             </code>
 
             <code className="comp-octave-tab">
-              <span>infects </span>
+              <span>cases </span>
               <span className="octave-symbols">= [</span>
               {coronaOctaveData.map((data) => (
                 <span>
-                  <span className="octave-numbers">
-                    {data.cummulatedInfected}
-                  </span>
+                  <span className="octave-numbers">{data.cummulatedCases}</span>
                   <span className="octave-symbols">, </span>
                 </span>
               ))}
@@ -327,7 +208,7 @@ export default function Data() {
 
             <code className="comp-octave-tab">
               <span>y</span> <span className="octave-symbols">= [</span>
-              <span>infects</span>
+              <span>cases</span>
               <span className="octave-symbols">;</span>
               <span>deads</span>
               <span className="octave-symbols">;</span>

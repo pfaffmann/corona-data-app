@@ -52,6 +52,15 @@ function App() {
             }}
           >
             Octave Daten erzeugen
+          </Button>{' '}
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => {
+              setView({ activeViewIndex: 4 });
+            }}
+          >
+            Bundesländer Octave Daten erzeugen
           </Button>
           <Button
             variant="outlined"
@@ -61,15 +70,6 @@ function App() {
             }}
           >
             Alle Daten anzeigen
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => {
-              setView({ activeViewIndex: 4 });
-            }}
-          >
-            Bundesländer Daten anzeigen
           </Button>
         </div>
         {loading ? (

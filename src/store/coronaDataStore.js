@@ -12,20 +12,6 @@ function combineArray(array) {
   return dataArray;
 }
 
-function sortArrayByMeldedatum(array) {
-  let sortedArray = [];
-  sortedArray = array.sort(
-    (a, b) => a.attributes.Meldedatum - b.attributes.Meldedatum
-  );
-  return sortedArray;
-}
-
-function filterArrayByFederalStateId(array, id) {
-  let filteredArray = [];
-  filteredArray = array.filter((a) => a.attributes.IdBundesland === id);
-  return filteredArray;
-}
-
 const coronaDataStore = {
   loading: false,
   error: '',

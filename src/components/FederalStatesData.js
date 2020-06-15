@@ -1,193 +1,162 @@
 import React, { useState, useEffect } from 'react';
 import { useStoreState, useStoreActions } from 'easy-peasy';
 
-function sortArrayByMeldedatum(array) {
-  let sortedArray = [];
-  sortedArray = array.sort(
-    (a, b) => a.attributes.Meldedatum - b.attributes.Meldedatum
-  );
-  return sortedArray;
-}
-function filterArrayByFederalStateId(array, id) {
-  let filteredArray = [];
-  filteredArray = array.filter((a) => a.attributes.IdBundesland === id);
-  return filteredArray;
-}
-function getFederalStateObject(array) {
-  let federalStateArray = [];
-  const sortedArray = sortArrayByMeldedatum(array);
-  const minMeldedatum = sortedArray[0].attributes.Meldedatum;
-  const maxMeldedatum =
-    sortedArray[sortedArray.length - 1].attributes.Meldedatum;
-  const einTagInMs = 60 * 60 * 24 * 1000;
-  const anzahlTage = (maxMeldedatum - minMeldedatum) / einTagInMs;
-  console.log(
-    `Min: ${minMeldedatum} Max: ${maxMeldedatum} Tage: ${anzahlTage}`
-  );
-  for (let i = 1; i <= 16; i++) {
-    federalStateArray.push(
-      sortArrayByMeldedatum(filterArrayByFederalStateId(array, i))
-    );
+import Button from '@material-ui/core/Button';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
+import { makeStyles } from '@material-ui/core/styles';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+
+import { toDate } from '../functions';
+import { createFederalCoronaData } from '../functions/federalState.js';
+import './components.css';
+
+function createOctaveString(federalCoronaData) {
+  const today = new Date();
+  const comment = `## Copyright (C) ${today.getFullYear()} Christoph Pfaffmann
+##
+## This program is free software: you can redistribute it and/or modify it
+## under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.\n##\n## This program is distributed in the hope that it will be useful, but
+## WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program. If not, see
+## https://www.gnu.org/licenses/.
+## Author: Christoph Pfaffmann
+## Created: ${toDate(today)}`;
+
+  let cummulatedCasesString = 'cummulatedCases=[';
+  let cummulatedDeathsString = 'cummulatedDeaths=[';
+  let cummulatedRecoveredString = 'cummulatedRecovered=[';
+  let casesString = 'cases=[';
+  let deathsString = 'deaths=[';
+  let recoveredString = 'recovered=[';
+  let datesString = 'dates=[';
+  let timeString = 'timeInMs=[';
+  if (federalCoronaData.length > 0) {
+    cummulatedCasesString += federalCoronaData
+      .map((fData) => fData.map((data) => data.cummulatedCases).join(', '))
+      .join('; ');
+    cummulatedDeathsString += federalCoronaData
+      .map((fData) => fData.map((data) => data.cummulatedDeaths).join(', '))
+      .join('; ');
+    cummulatedRecoveredString += federalCoronaData
+      .map((fData) => fData.map((data) => data.cummulatedRecovered).join(', '))
+      .join('; ');
+    casesString += federalCoronaData
+      .map((fData) => fData.map((data) => data.cases).join(', '))
+      .join('; ');
+    deathsString += federalCoronaData
+      .map((fData) => fData.map((data) => data.deaths).join(', '))
+      .join('; ');
+    recoveredString += federalCoronaData
+      .map((fData) => fData.map((data) => data.recovered).join(', '))
+      .join('; ');
+    datesString += federalCoronaData
+      .map((fData) => fData.map((data) => `'${toDate(data.date)}'`).join(', '))
+      .join('; ');
+    timeString += federalCoronaData
+      .map((fData) => fData.map((data) => data.date).join(', '))
+      .join('; ');
+
+    const octaveString = `${comment}
+function [SH,HH,NS,HB,NRW,HS,RLP,BW,BY,SL,BE,BR,MV,S,SA,TH] = bundeslandCoronaData()
+  ${cummulatedCasesString}];
+  ${cummulatedDeathsString}];
+  ${cummulatedRecoveredString}];
+  ${casesString}];
+  ${deathsString}];
+  ${recoveredString}];
+  ${datesString}];
+  ${timeString}];
+  ${federalStateDataString()}
+endfunction`;
+    return octaveString;
   }
-  return { federalStateArray, minMeldedatum, maxMeldedatum };
-}
-function generateOctaveData(array) {
-  let octaveData = [];
-  let datum = 0;
-  let cummulatedCases = 0;
-  let cummulatedRecovered = 0;
-  let cummulatedDeaths = 0;
-  let cases = 0;
-  let recovered = 0;
-  let deaths = 0;
-  array.map((element, index, arr) => {
-    if (index < arr.length - 1) {
-      if (
-        arr[index].attributes.Meldedatum ===
-        arr[index + 1].attributes.Meldedatum
-      ) {
-        cases +=
-          element.attributes.NeuerFall === 0 ||
-          element.attributes.NeuerFall === 1
-            ? element.attributes.AnzahlFall
-            : 0;
-        deaths +=
-          element.attributes.NeuerTodesfall === 0 ||
-          element.attributes.NeuerTodesfall === 1
-            ? element.attributes.AnzahlTodesfall
-            : 0;
-        recovered +=
-          element.attributes.NeuGenesen === 0 ||
-          element.attributes.NeuGenesen === 1
-            ? element.attributes.AnzahlGenesen
-            : 0;
-      } else {
-        cases +=
-          element.attributes.NeuerFall === 0 ||
-          element.attributes.NeuerFall === 1
-            ? element.attributes.AnzahlFall
-            : 0;
-        deaths +=
-          element.attributes.NeuerTodesfall === 0 ||
-          element.attributes.NeuerTodesfall === 1
-            ? element.attributes.AnzahlTodesfall
-            : 0;
-        recovered +=
-          element.attributes.NeuGenesen === 0 ||
-          element.attributes.NeuGenesen === 1
-            ? element.attributes.AnzahlGenesen
-            : 0;
-        datum = element.attributes.Meldedatum;
-        cummulatedCases += cases;
-        cummulatedDeaths += deaths;
-        cummulatedRecovered += recovered;
-        //Speichere die Were in Array
-        octaveData.push({
-          cummulatedCases,
-          cummulatedRecovered,
-          cummulatedDeaths,
-          cases,
-          recovered,
-          deaths,
-          date: datum,
-        });
-        //setze zurück auf 0
-        cases = 0;
-        deaths = 0;
-        recovered = 0;
-      }
-    } else {
-      cases +=
-        element.attributes.NeuerFall === 0 || element.attributes.NeuerFall === 1
-          ? element.attributes.AnzahlFall
-          : 0;
-      deaths +=
-        element.attributes.NeuerTodesfall === 0 ||
-        element.attributes.NeuerTodesfall === 1
-          ? element.attributes.AnzahlTodesfall
-          : 0;
-      recovered +=
-        element.attributes.NeuGenesen === 0 ||
-        element.attributes.NeuGenesen === 1
-          ? element.attributes.AnzahlGenesen
-          : 0;
-      datum = element.attributes.Meldedatum;
-      cummulatedCases += cases;
-      cummulatedDeaths += deaths;
-      cummulatedRecovered += recovered;
-      //Speichere die Were in Array
-      octaveData.push({
-        cummulatedCases,
-        cummulatedRecovered,
-        cummulatedDeaths,
-        cases,
-        recovered,
-        deaths,
-        date: datum,
-      });
-    }
-  });
-  return octaveData;
+  return '';
 }
 
-function reduceFederalStateArray(object) {
-  const { federalStateArray, minMeldedatum, maxMeldedatum } = object;
-  let reducedArray = [];
-  federalStateArray.map((federalArray) => {
-    let length = 0;
-    reducedArray.push(generateOctaveData(federalArray));
-    length = reducedArray.length;
-  });
-  return { reducedArray, minMeldedatum, maxMeldedatum };
+function federalStateDataString() {
+  const federalStates = [
+    'SH',
+    'HH',
+    'NS',
+    'HB',
+    'NRW',
+    'HS',
+    'RLP',
+    'BW',
+    'BY',
+    'SL',
+    'BE',
+    'BR',
+    'MV',
+    'S',
+    'SA',
+    'TH',
+  ];
+  let federalStrateString = '';
+  for (let i = 1; i <= federalStates.length; i++) {
+    federalStrateString += `${
+      federalStates[i - 1]
+    }=[timeInMs(${i},:); cases(${i},:); deaths(${i},:); recovered(${i},:); cummulatedCases(${i},:); cummulatedDeaths(${i},:); cummulatedRecovered(${i},:)];\n\t`;
+  }
+  return federalStrateString;
 }
 
-function expandFederalStateObject(object) {
-  const expandedArray = [];
-  const { reducedArray, minMeldedatum, maxMeldedatum } = object;
-  const dayInMs = 24 * 60 * 60 * 1000;
-  const anzahlTage = (maxMeldedatum - minMeldedatum) / dayInMs;
-  reducedArray.map((element) => {
-    let length = element.length;
-    while (length <= anzahlTage) {
-      element.push({ date: length });
-      length = element.length;
-    }
-  });
-  let emptyArray = [anzahlTage + 1];
-  const emptyEntry = {
-    cases: 0,
-    deaths: 0,
-    recovered: 0,
-    cummulatedCases: 0,
-    cummulatedDeaths: 0,
-    cummulatedRecovered: 0,
-    nodata: true,
-  };
-  for (let i = 0; i <= anzahlTage; i++) {
-    emptyArray[i] = { ...emptyEntry, date: minMeldedatum + i * dayInMs };
-  }
-  reducedArray.map((reduced, index) => {
-    for (let i = 0; i < reduced.length; i++) {
-      for (let j = 0; j < emptyArray.length; j++) {
-        if (emptyArray[j].date === reduced[i].date) {
-          emptyArray[j] = reduced[i];
-        }
-      }
-    }
-    expandedArray.push(emptyArray);
-  });
-  return expandedArray;
+function Alert(props) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    width: '100%',
+    '& > * + *': {
+      marginTop: theme.spacing(2),
+    },
+  },
+}));
 
 export default function FederalStateDate() {
-  const [federalCoronaData, setFederalCoronaData] = useState([]);
   const { data } = useStoreState((state) => state.coronaData);
-  useEffect(() => {
-    console.log(
-      expandFederalStateObject(
-        reduceFederalStateArray(getFederalStateObject(data))
-      )
-    );
-  }, []);
-  return null;
+  const federalCoronaData = createFederalCoronaData(data);
+
+  const [open, setOpen] = useState(false);
+
+  const classes = useStyles();
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+  };
+
+  return (
+    <div className="comp">
+      <div className={classes.root}>
+        <div className="comp-center">
+          <CopyToClipboard text={createOctaveString(federalCoronaData)}>
+            <Button variant="outlined" color="primary" onClick={handleClick}>
+              In Zwischenablage kopieren
+            </Button>
+          </CopyToClipboard>
+          <Snackbar open={open} autoHideDuration={3000} onClose={handleClose}>
+            <Alert onClose={handleClose} severity="success">
+              Daten in Zwischenbalage kopiert.
+            </Alert>
+          </Snackbar>
+        </div>
+      </div>
+    </div>
+  );
 }
