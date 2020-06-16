@@ -124,7 +124,7 @@ const useStyles = makeStyles((theme) => ({
 export default function FederalStateDate() {
   const { data } = useStoreState((state) => state.coronaData);
   const federalCoronaData = createFederalCoronaData(data);
-
+  const federalOctaveData = createOctaveString(federalCoronaData);
   const [open, setOpen] = useState(false);
 
   const classes = useStyles();
@@ -145,7 +145,7 @@ export default function FederalStateDate() {
     <div className="comp">
       <div className={classes.root}>
         <div className="comp-center">
-          <CopyToClipboard text={createOctaveString(federalCoronaData)}>
+          <CopyToClipboard text={federalOctaveData}>
             <Button variant="outlined" color="primary" onClick={handleClick}>
               In Zwischenablage kopieren
             </Button>
@@ -156,6 +156,9 @@ export default function FederalStateDate() {
             </Alert>
           </Snackbar>
         </div>
+      </div>
+      <div className="comp-octave">
+        <code>{federalOctaveData}</code>
       </div>
     </div>
   );
