@@ -56,15 +56,16 @@ function createOctaveString(federalCoronaData) {
     recoveredString += federalCoronaData
       .map((fData) => fData.map((data) => data.recovered).join(', '))
       .join('; ');
-    datesString += federalCoronaData
-      .map((fData) => fData.map((data) => `'${toDate(data.date)}'`).join(', '))
-      .join('; ');
+    datesString += federalCoronaData.map((fData) =>
+      fData.map((data) => `'${toDate(data.date)}'`).join('; ')
+    );
+
     timeString += federalCoronaData
       .map((fData) => fData.map((data) => data.date).join(', '))
       .join('; ');
 
     const octaveString = `${comment}
-function [SH,HH,NS,HB,NRW,HS,RLP,BW,BY,SL,BE,BR,MV,S,SA,TH] = bundeslandCoronaData()
+function [SH,HH,NS,HB,NRW,HS,RLP,BW,BY,SL,BE,BR,MV,S,SA,TH,dates] = bundeslandCoronaData()
   ${cummulatedCasesString}];
   ${cummulatedDeathsString}];
   ${cummulatedRecoveredString}];
